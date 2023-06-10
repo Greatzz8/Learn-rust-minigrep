@@ -7,21 +7,17 @@ pub struct Config{
     pub ignore_case:bool,
 }
 impl Config {
-    pub fn new(args:&Vec<String>) -> Config{
-        if args.len()<3{
-            panic!("Not enough args!");
-        }
-        let query=args[1].clone();
-        let filepath=args[2].clone();
-        Config { query: query, filepath: filepath,ignore_case:env::var("IGNORE_CASE").is_ok() }
-    }
 
-    pub fn build(args:&Vec<String>) -> Result<Config,&'static str>{
-        if args.len()<3{
-            return Err("Not enough args!");
-        }
-        let query=args[1].clone();
-        let filepath=args[2].clone();
+    pub fn build(mut args: impl Iterator<Item=String>) -> Result<Config,&'static str>{
+        args.next();
+        let query=match args.next() {
+            Some(q) => q,
+            None => return Err("No query specified!"),
+        };
+        let filepath=match args.next() {
+            Some(q) => q,
+            None => return Err("No filepath specified!"),
+        };
         Ok(Config { query: query, filepath: filepath,ignore_case:env::var("IGNORE_CASE").is_ok() })
     }
 }
@@ -39,26 +35,28 @@ pub fn run(config:Config)->Result<(),Box<dyn Error>>{
     Ok(())
 }
 pub fn search<'a>(query:& str,content:&'a str)->Vec<&'a str>{
-    let mut ans=Vec::new();
-    for line in content.lines(){
-        if line.contains(query)
-        {
-            ans.push(line);
-        }
-    }
-    ans
+    // let mut ans=Vec::new();
+    // for line in content.lines(){
+    //     if line.contains(query)
+    //     {
+    //         ans.push(line);
+    //     }
+    // }
+    // ans
+    content.lines().filter(|line| line.contains(query)).collect()
 }
 
 pub fn search_case_insensitive<'a>(query:& str,content:&'a str)->Vec<&'a str>{
-    let mut ans=Vec::new();
-    let query=query.to_lowercase();
-    for line in content.lines(){
-        if line.to_lowercase().contains(&query)
-        {
-            ans.push(line);
-        }
-    }
-    ans
+    // let mut ans=Vec::new();
+    // let query=query.to_lowercase();
+    // for line in content.lines(){
+    //     if line.to_lowercase().contains(&query)
+    //     {
+    //         ans.push(line);
+    //     }
+    // }
+    // ans
+    content.lines().filter(|line| line.to_lowercase().contains(&query.to_lowercase())).collect()
 }
 
 #[cfg(test)]
